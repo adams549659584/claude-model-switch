@@ -33,6 +33,35 @@ interface ResolvedSpeedConfig {
 }
 
 export class SpeedTester {
+  /**
+   * 生成随机测速提示，避免请求模式过于固定被封禁
+   */
+  private generateRandomPrompt(): string {
+    // 多种问题模板
+    const templates: ((n: number) => string)[] = [
+      (n: number) => `List the numbers from 1 to ${n}, one per line.`,
+      (n: number) => `Count from 1 to ${n}, each number on a new line.`,
+      (n: number) => `Please output numbers 1 through ${n}, line by line.`,
+      (n: number) => `Write numbers from 1 up to ${n}, one per line.`,
+      (n: number) => `Enumerate numbers 1 to ${n}, each on its own line.`,
+      // 字母表类
+      (n: number) => `List the first ${n} letters of the alphabet, one per line.`,
+      (n: number) => `Write letters A through ${String.fromCharCode(64 + n)}, one per line.`,
+      // 简单任务类
+      (n: number) => `Say "hello world" ${n} times, each on a new line.`,
+      (n: number) => `Print the word "hello world" ${n} times, one per line.`,
+      (n: number) => `List ${n} common colors, one per line.`,
+      (n: number) => `Name ${n} fruits, one per line.`,
+    ];
+
+    // 随机选择模板和参数
+    const template = templates[Math.floor(Math.random() * templates.length)];
+    // 随机生成参数：字母类用 10-26，数字类用 20-50
+    const randomNum = Math.floor(Math.random() * 31) + 20; // 20-50
+
+    return template(randomNum);
+  }
+
   async listModels(baseURL?: string, token?: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<string[]> {
     const normalizedBaseURL = this.normalizeModelsBaseURL(baseURL);
     if (!normalizedBaseURL) {
@@ -80,7 +109,7 @@ export class SpeedTester {
       const stream = await client.messages.create({
         model,
         max_tokens: 128,
-        messages: [{ role: 'user', content: 'List the numbers from 1 to 50, one per line.' }],
+        messages: [{ role: 'user', content: this.generateRandomPrompt() }],
         stream: true,
       });
 
